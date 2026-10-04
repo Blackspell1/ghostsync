@@ -1,0 +1,23 @@
+﻿services:
+  - type: web
+    name: ghostsync
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm run docker-start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SHOPIFY_API_KEY
+        value: 790628a610ddb04ef53f725df31fdfef
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SCOPES
+        value: read_inventory,read_locations,read_products,write_inventory,write_products
+      - key: SHOPIFY_APP_URL
+        value: https://app.fmv.lol
+      - key: DATABASE_URL
+        sync: false

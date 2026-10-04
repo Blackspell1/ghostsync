@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConnectedStore {
+  id                      Int      @id @default(autoincrement())
+  shopDomainA             String
+  shopDomainB             String
+  accessTokenA            String
+  accessTokenB            String
+  primaryLocationIdA      BigInt?
+  primaryLocationIdB      BigInt?
+  circuitBreakerThreshold Int      @default(70) // Percentage drop that triggers trip
+  circuitBreakerTripped   Boolean  @default(false)
+  circuitBreakerReason    String?
+  priceMultiplier         Float    @default(1.0) // Wholesale pricing multiplier (e.g. 0.5 for 50% wholesale)
+  priceOffset             Float    @default(0.0) // Fixed markup/discount offset
+  speedSurgeMode          Boolean  @default(false) // Flash sale / BFCM low latency surge mode
+  autoHealDrift           Boolean  @default(true) // Automated Drift Doctor self-healing
+  orderForwardingEnabled  Boolean  @default(true) // Cross-store order mirroring
+  createdAt               DateTime @default(now())
+
+  inventoryMappings       InventoryMapping[]
+  forwardedOrders         ForwardedOrder[]
+
+  @@unique([shopDomainA, shopDomainB])
+}
+
+model InventoryMapping {
+  id                 Int      @id @default(autoincrement())
+  storeGroupId       Int
+  storeGroup         ConnectedStore @relation(fields: [storeGroupId], references: [id], onDelete: Cascade)
+  sku                String
+  variantIdA         BigInt
+  inventoryItemIdA   BigInt
+  variantIdB         BigInt
+  inventoryItemIdB   BigInt
+  syncedQuantity     Int      @default(0)
+  bufferQuantity     Int      @default(0)
+  multiplier         Float    @default(1.0)
+  isSyncing          Boolean  @default(false)
+  lastSync           DateTime @default(now())
+}
+
+model InventorySnapshot {
+  id              Int      @id @default(autoincrement())
+  sku             String
+  shopDomain      String
+  inventoryItemId BigInt
+  locationId      BigInt
+  quantity        Int
+  createdAt       DateTime @default(now())
+}
+
+model ForwardedOrder {
+  id               Int      @id @default(autoincrement())
+  storeGroupId     Int
+  storeGroup       ConnectedStore @relation(fields: [storeGroupId], references: [id], onDelete: Cascade)
+  satelliteShop    String
+  hubShop          String
+  satelliteOrderId String
+  hubOrderId       String?
+  orderNumber      String
+  customerEmail    String?
+  totalPrice       String
+  itemCount        Int      @default(1)
+  status           String   @default("FORWARDED") // FORWARDED, FULFILLED, CANCELLED
+  createdAt        DateTime @default(now())
+}
+
+model SyncLog {
+  id          Int      @id @default(autoincrement())
+  sku         String
+  sourceShop  String
+  destShop    String
+  oldQuantity Int
+  newQuantity Int
+  status      String   @default("SUCCESS") // SUCCESS, BUFFERED, TRIPPED, SELF_HEALED, ORDER_FORWARDED, PRICE_SYNCED
+  details     String?
+  latencyMs   Int?     @default(450)
+  createdAt   DateTime @default(now())
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
