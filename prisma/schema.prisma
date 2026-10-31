@@ -111,3 +111,31 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+model Mailbox {
+  id        Int            @id @default(autoincrement())
+  address   String         @unique // e.g. "support@fmv.lol" or "contact@fmv.lol"
+  name      String         // Friendly label, e.g. "Support Desk"
+  createdAt DateTime       @default(now())
+  emails    InboundEmail[]
+}
+
+model InboundEmail {
+  id          Int      @id @default(autoincrement())
+  mailboxId   Int?
+  mailbox     Mailbox? @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  toAddress   String   // The recipient address, e.g. "support@fmv.lol"
+  fromAddress String   // e.g. "customer@gmail.com"
+  fromName    String?  // e.g. "John Doe"
+  subject     String
+  textBody    String?
+  htmlBody    String?
+  rawSize     Int?     @default(0)
+  isRead      Boolean  @default(false)
+  isStarred   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([toAddress])
+  @@index([createdAt])
+}
+
