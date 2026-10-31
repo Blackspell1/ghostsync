@@ -403,14 +403,23 @@ export default function MailApp() {
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, padding: "24px", overflowY: "auto", color: "#e2e8f0", fontSize: "14px", lineHeight: "1.6" }}>
+            <div style={{ flex: 1, padding: "24px", overflowY: "auto", color: "#e2e8f0", fontSize: "14px", lineHeight: "1.6", display: "flex", flexDirection: "column" }}>
               {activeEmail.htmlBody ? (
-                <div
-                  style={{ backgroundColor: "#ffffff", color: "#111827", padding: "20px", borderRadius: "8px" }}
-                  dangerouslySetInnerHTML={{ __html: activeEmail.htmlBody }}
-                />
+                <div style={{ flex: 1, backgroundColor: "#ffffff", borderRadius: "10px", overflow: "hidden", minHeight: "550px", display: "flex", flexDirection: "column", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)" }}>
+                  <iframe
+                    title="Email Content"
+                    srcDoc={activeEmail.htmlBody}
+                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                    style={{
+                      width: "100%",
+                      flex: 1,
+                      border: "none",
+                      backgroundColor: "#ffffff",
+                    }}
+                  />
+                </div>
               ) : (
-                <div style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
+                <div style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", padding: "16px", backgroundColor: "#0b0f19", borderRadius: "8px", border: "1px solid #1e293b" }}>
                   {activeEmail.textBody || "(Empty email message)"}
                 </div>
               )}
